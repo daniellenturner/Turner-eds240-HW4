@@ -1,0 +1,282 @@
+---
+title: "HW2-exploration"
+author: "Danielle Turner"
+date: 2025-02-02
+format: html
+embed-resources: true
+editor: visual
+theme: sandstone
+---
+
+### 2B. **Import & wrangle data, then create exploratory data viz**
+
+**Viz #1A: Tree Map of Focus Area Abundance for Funds**
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(treemap)
+
+#Read in data
+sfohf_companies <- read_csv(here::here("SFOHF_Companies.csv"))
+
+#Wrangle data
+treemap_fund_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct() |>
+  filter(type == "Fund") |>
+  ungroup()
+
+# Summarize the count per focus area
+treemap_data <- treemap_fund_data |>
+  group_by(focus_area) |>
+  summarise(count = sum(count)) |>
+  arrange(desc(count))
+
+# Calculate total count and percentages
+total_count_fund <- sum(treemap_data$count)
+treemap_data <- treemap_data |>
+  mutate(percentage = (count / total_count_fund) * 100,
+         subtext = paste0(round(percentage, 1), "%"),  # to help w label
+         label = paste0(focus_area, "\n", subtext))  # label I want on plot
+
+# Make custom colors for each focus area
+custom_colors <- c(
+  "Climate" = "#387794",
+  "Sustainable Aquaculture" = "#388294",
+  "Science-Based Monitoring Tools" = "#388C94",
+  "Biodiversity" = "#389491",
+  "Regenerative Nature-Based Solutions" = "#389486",
+  "Circular Economy" = "#38947B")
+
+# Convert focus_area to a factor
+treemap_data <- treemap_data |>
+  mutate(focus_area = as.factor(focus_area))
+
+# Plot the treemap with labels
+treemap_fund <- treemap(treemap_data,
+        index = "label",      
+        vSize = "count",       
+        vColor = "focus_area", 
+        type = "categorical",  
+        palette = unname(custom_colors[levels(treemap_data$focus_area)]), 
+        title = "Fund Focus Areas",
+        fontsize.labels = 10,  
+        force.print.labels = TRUE,
+        aspRatio = 2.75,
+        border.col = "white",
+        position.legend = "none")
+
+
+```
+
+**Viz #1B: Tree Map of Focus Area Abundance for Grants**
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(treemap)
+
+#Wrangle data
+treemap_grant_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct() |>
+  filter(type == "Grant") |>
+  ungroup()
+
+# Summarize the count per focus area
+treemap_data_grant <- treemap_grant_data |>
+  group_by(focus_area) |>
+  summarise(count = sum(count)) |>
+  arrange(desc(count))
+
+# Calculate total count and percentages
+total_count_grant <- sum(treemap_data_grant$count)
+treemap_data_grant <- treemap_data_grant |>
+  mutate(percentage = (count / total_count_grant) * 100,
+         subtext = paste0(round(percentage, 1), "%"),  
+         label = paste0(focus_area, "\n", subtext)) 
+
+# Make custom colors for each focus area
+custom_colors <- c(
+  "Climate" = "#387794",
+  "Sustainable Aquaculture" = "#388294",
+  "Science-Based Monitoring Tools" = "#388C94",
+  "Biodiversity" = "#389491",
+  "Regenerative Nature-Based Solutions" = "#389486",
+  "Circular Economy" = "#38947B")
+
+# Convert focus_area to a factor
+treemap_data_grant <- treemap_data_grant |>
+  mutate(focus_area = as.factor(focus_area))
+
+# Plot the treemap with labels
+treemap_grant <- treemap(treemap_data_grant,
+        index = "label",       
+        vSize = "count",       
+        vColor = "focus_area", 
+        type = "categorical",  
+        palette = unname(custom_colors[levels(treemap_data$focus_area)]), 
+        title = "Grant Focus Areas",
+        fontsize.labels = 10,  
+        force.print.labels = TRUE,
+        aspRatio = 2.75,
+        border.col = "white",
+        position.legend = "none")
+
+```
+
+Patchwork does not work with Library(treemap). I would like to stack these two plots vertically in another application like Canva or Google Docs.
+
+**Viz #2: Bar Chart of Focus Areas**
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+#Wrangle Data
+foc_area_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct()
+
+#Plot bar chart with custom colors and theme
+foc_area_data |>
+  ggplot(aes(x = focus_area, y = count, fill = type)) +
+  geom_col() +
+  scale_fill_manual(values = c("Fund" = "#387794", "Grant" = "#89D2C0")) +
+  coord_flip() +
+  labs(title = "Number of Investments per Focus Area",
+       fill = "Investment Type") +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 9,
+                                color = "#32213A"),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = c(0.85, 0.15),
+    legend.key.height = unit(0.25, "cm"),
+    legend.key.width = unit(0.4, "cm"),
+    legend.text = element_text(color = "#32213A"),
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5,
+                              size = 20,
+                              color = "#32213A"),
+    axis.line.y = element_line(color = "#32213A"),
+    axis.line.x = element_line(color = "#32213A"),
+    axis.text = element_text(color = "#32213A"),
+    panel.grid.major = element_blank())
+```
+
+**Viz #3: Map of Impact Locations (based on Tier 2 Fund HQ locations)**
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+#Code adapted from my ESM 206 Homework 1
+
+# Spatial libraries
+library(rnaturalearth) # base maps
+library(ggspatial) # north arrows and scale
+library(ggrepel) #making labels that do not overlap
+library(sf) #plotting boundaries
+library(rnaturalearthhires)
+library(ggplot2)
+library(rnaturalearthdata)
+library(tidygeocoder)
+library(dplyr)
+
+#Get world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+#Define countries to highlight
+highlighted_countries <- c("United States", "Scotland", "Kenya", "Israel", "Norway", "Mozambique", "Indonesia", "Thailand", "Finland", "Brazil", "Ireland", "Madagascar", "Zimbabwe, Zambia", "South Africa", "Uganda", "Iceland", "Portugal", "Poland", "Netherlands", "India", "Singapore", "Sweden", "Vietnam", "Canada", "Fiji", "Micronesia", "Papua New Guinea", "Philippines", "Sri Lanka", "Maldives", "Seychelles", "Colombia", "Bahamas", "Guatemala", "Jordan", "Egypt", "Chile", "United Kingdom", "France", "New Zealand", "Puerto Rico", "Australia", "Ecuador", "Germany", "Denmark", "Italy", "Myanmar", "Costa Rica", "Malaysia", "Honduras", "Mexico", "Belize")
+
+world <- world |>
+  mutate(highlight = ifelse(name_long %in% highlighted_countries, "Impact Reached", "Not Yet"))
+
+# Plot the map and highlight impact countries
+ggplot(data = world) +  
+  geom_sf(aes(fill = highlight), color = "gray90") + 
+  scale_fill_manual(values = c("#387794", "gray90")) +
+  theme_minimal() +
+  ggtitle("Map of Sea Forward Ocean Health Fund's Impact Reach") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank()) +
+  theme(
+    plot.title = element_text(hjust = 0.5,
+                              colour = "#32213A"),
+     legend.text = element_text(color = "#32213A"))
+
+
+```
+
+# 2C. Answer Questions
+
+**\
+1. What have you learned about your data? Have any potentially interesting patterns emerged?**
+
+I can clearly see the distribution of Sea Forward Ocean Health Fund's (SFOHF) funds and grants: almost 75% of their funds go towards the climate and sustainable aquaculture focus areas, whereas the grants make the most impact in the biodiversity focus area. I think the distribution of capital is important to visualize as SFOHF can use this information to decide which focus areas they want to invest in as they expand their portfolio.
+
+**2. In HW #1, you outlined some questions that you wanted to answer using these data. Have you made any strides towards answering those questions? If yes, how so? If no, what next steps do you need to take (e.g. I need to create X plot type, I still need to track down Y data, I need to restructure existing data so that you can visualize it in Z ways, etc.)?**
+
+I think the above visuals are beginning to answer 2 of the sub questions that I outlines in HW#1:
+
+-   Where is impact happening/reaching?
+
+-   Which focus areas are we impacting the most?
+
+I think my map is a good way to visualize where impact is happening, but I would like to maybe add some labels to give more context (e.g., how many orgs in each country). My tree maps and bar chart all begin to answer the focus area question... but I originally was hoping to make a doughnut chart for this. I spent a few hours trying to get a doughnut chart to work, but could not figure out how to format the chart properly.
+
+**3. What challenges do you foresee encountering with your data? These can be data wrangling and / or visualization challenges.**
+
+Building off of the previous question, I also attempted making a sankey diagram to answer another question I outlined in HW#1 (which partners contribute to which focus areas?), but after spending a mind-boggling 7 hours on it, I gave up. I couldn't figure out how to organize my data to make the flow of the diagram work. This is something I'd love to work through if I have more time another week.
+
+Another challenge I may run into is collecting and organizing KPI data that is consistent across several organizations. I have access to impact reports from a handful of organizations, so I will work on organizing KPI data this week and then hopefully will be able to wrangle data and output a nice visual of org-specific impact.

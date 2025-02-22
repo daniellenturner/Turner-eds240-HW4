@@ -1,0 +1,396 @@
+---
+title: "HW3-drafting-viz"
+format:
+  html:
+    embed-resources: true
+editor: visual
+author: "Danielle Turner"
+date: 2025-02-22
+theme: sandstone
+---
+
+# Questions
+
+**1) Which option do you plan to pursue? It’s okay if this has changed since HW #1.**\
+I plan to pursue option 1 (infographic) for my class project.
+
+**2) Restate your question(s). Has this changed at all since HW #1? If yes, how so?**\
+Overarching Question: What does Sea Forward's 2024 impact look like?\
+sub Q1: Where is impact happening/reaching? \
+sub Q2: Which focus areas are we impacting the most?\
+sub Q3: What are Sea Forward's major KPIs and their values from 2024?\
+\
+I changed my overarching question because some newer companies Sea Forward is invested in only have qualitative data to report, so it would be misleading to frame this infrographic as "total measurable impact" when not all impact data can be included in the plots. \
+\
+I also changed my third sub-question because I felt like a network chart was too busy for this infographic and including information on key productivity indicators (KPIs) would be more meaningful.
+
+**3) Explain which variables from your data set(s) you will use to answer your question(s), and how.** \
+I am collecting and organizing data for Sea Forward from the impact reports of organizations we are invested in. Below is a summary of the data I have and how I plan to use them in my infographic.\
+\
+Variables from sfohf_companies dataset:
+
+-   Org Tier 1 —\> Blue investment firms that Sea Forward is directly invested in
+
+-   Org Tier 2 —\> Organizations that Sea Forward is directly invested in and organizations the Org Tier 1 organizations are invested in
+
+-   Focus Area —\> Attributes at least one of Sea Forward's focus areas to each Tier 2 Org
+
+-   Org Tier 2 HQ location —\> Where the funded companies are based
+
+-   Type —\> Fund or grant investment
+
+I also made datasets for each Org Tier 1 organization because there are variables that will not be totally consistent across organizations. For example, I am collecting KPIs from individual impact reports that are mostly aligned with [Ocean Impact Navigator's](https://www.1000oceanstartups.org/navigator) impact KPI framework; however, not all companies can report the same KPIs due to the nature of their work. Additionally, to accomodate newer/smaller organizations that don't have bandwidth to collect and report quantitative data, I'm also accepting qualitative data. The qualitative data will not be used in my infographic—but will be used in the final impact report! \
+\
+To answer my first sub-question, I used the ne_countries dataset from the rnaturalearth library and highlighted the countries from my sfohf_companies Tier 2 HQ location variable. For the second sub-question, I wrangled my sfohf_compnies dataset to calculate what the percent of Sea Forward funds going towards each focus area (using the Org Tier 2 and Focus Area variables). For the third sub-question, I made a Google sheet that calculated a few major KPIs across all companies (# of people employed, trained, educated, or financially supported; GHG/CO2e avoided and reduced; plastic/waste upcycled/reduced/diverted from ocean and landfills; land area regenerated/protected/restored; meals produced) and then downloaded that dataset as a csv (summed_kpis.csv) to make into bar chart.
+
+# Data visualizations to (potentially) borrow / adapt pieces from
+
+If I end up making a sankey chart, I would like to adapt the vertical set up that this one has, and maybe the color gradient too!
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/inspo_pics/vertsankey.png")
+```
+
+<https://www.amcharts.com/demos/vertical-sankey-diagram/>\
+\
+The map I made in HW2 was very plain. I would like to borrow some design choices from this map, like a non-white background and play with typefaces and fonts.
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/inspo_pics/Boundaries_GlobalNeighbors.png")
+```
+
+<https://raw.githubusercontent.com/z3tt/30DayMapChallenge2019/master/contributions/Day14_Boundaries/Boundaries_GlobalNeighbors.png>\
+\
+I think these sankey charts are really aesthetically pleasing. Other than the colors, I like how the sankey charts don't look messy in these. They're easy to follow and don't vary much in size. I also appreciate that the lower sankey chart is not 100% opaque which makes it easier for my eye to follow.
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/inspo_pics/01_bump_plot.png")
+```
+
+<https://albert-rapp.de/dataviz_portfolio> ("Basic bumps vs. ribbon bump charts")
+
+# Sketches of anticipated visualizations
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/hand_sketches/Impact_Network_viz.png")
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/hand_sketches/Impact_Reach_Viz.jpeg")
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/hand_sketches/Focus_Area_Viz.png")
+```
+
+All together would look something like the following:
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/hand_sketches/Eds240_Proj_V3.jpeg")
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/hand_sketches/Eds240_Proj_V2.jpeg")
+```
+
+# Mock up **all** of my hand drawn visualizations using code
+
+### Treemap
+
+```{r}
+#SFOH logo color: #00A6DA
+#SFOH dark blue: #0C2F5B
+#SFOH fonts: Open sans, Belleza, and Baloo
+
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+suppressPackageStartupMessages({
+  library(janitor)
+  library(tidyverse)
+  library(here)
+})
+library(dplyr)
+library(ggplot2)
+library(treemap)
+
+
+#..........................import data...........................
+sfohf_companies <- read_csv(here::here("SFOHF_Companies.csv"), show_col_types = FALSE)
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Clean names, reorganize, and only keep data of interest ----
+treemap_fund_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct() |>
+  filter(type == "Fund") |>
+  ungroup()
+
+# Summarize the count per focus area ----
+treemap_data <- treemap_fund_data |>
+  group_by(focus_area) |>
+  summarise(count = sum(count)) |>
+  arrange(desc(count))
+
+# Calculate total count and percentages ----
+total_count_fund <- sum(treemap_data$count)
+treemap_data <- treemap_data |>
+  mutate(percentage = (count / total_count_fund) * 100,
+         subtext = paste0(round(percentage, 1), "%"),
+         label = paste0(subtext)) # Puts percent values onto tree map
+         #label = paste0(focus_area, "\n", subtext))  # Commenting out for now, but for text I may want on my plot later
+
+# Convert focus_area to a factor ----
+treemap_data <- treemap_data |>
+  mutate(focus_area = as.factor(focus_area))
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Save treemap ----
+#png(filename = here::here("treemap_fund.png"), width = 2000, height = 1500, res = 300)
+#dev.off()
+
+# Plot the treemap with labels ----
+treemap_fund <- treemap(treemap_data,
+        index = "label",      
+        vSize = "count",       
+        vColor = "focus_area", 
+        type = "categorical",  
+        palette = "#00A6DA", 
+        title = "Fund Focus Areas",
+        fontfamily.title = "belleza",
+        fontsize.labels = 10,
+        fontcolor.labels = "white",
+        force.print.labels = TRUE,
+        aspRatio = 2.75,
+        border.col = "#0C2F5B",
+        position.legend = "none")
+
+```
+
+### Global Map
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+####Code adapted from my ESM 206 Homework 1####
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(rnaturalearth) # base maps
+library(ggspatial) # north arrows and scale
+library(sf) #plotting boundaries
+library(rnaturalearthhires)
+library(ggplot2)
+library(rnaturalearthdata)
+library(tidygeocoder)
+library(dplyr)
+
+#..........................import world map data...........................
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Define countries to highlight ----
+highlighted_countries <- c("United States", "Scotland", "Kenya", "Israel", "Norway",
+                           "Mozambique", "Indonesia", "Thailand", "Finland", "Brazil",
+                           "Ireland", "Madagascar", "Zimbabwe, Zambia", "South Africa",
+                           "Uganda", "Iceland", "Portugal", "Poland", "Netherlands", 
+                           "India", "Singapore", "Sweden", "Vietnam", "Canada", "Fiji",
+                           "Micronesia", "Papua New Guinea", "Philippines", 
+                           "Sri Lanka", "Maldives", "Seychelles", "Colombia", "Bahamas",
+                           "Guatemala", "Jordan", "Egypt", "Chile", "United Kingdom", 
+                           "France", "New Zealand", "Puerto Rico", "Australia", 
+                           "Ecuador", "Germany", "Denmark", "Italy", "Myanmar", 
+                           "Costa Rica", "Malaysia", "Honduras", "Mexico", "Belize")
+world <- world |>
+  mutate(highlight = ifelse(name_long %in% highlighted_countries, 
+                            "Impact Reached", "Not Yet"))
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot the map and fill countries ----
+ggplot(data = world) +  
+  geom_sf(aes(fill = highlight), color = "#0C2F5B") + 
+  scale_fill_manual(values = c("#00A6DA", "#0C3F5B")) +
+  theme_minimal() +
+  ggtitle("Map of Sea Forward Ocean Health Fund's Impact Reach") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "#0C2F5B", color = NA),
+        plot.background = element_rect(fill = "#0C2F5B", color = NA),
+        legend.position = "bottom",
+        legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5, 
+                                  color = "white", 
+                                  family = "belleza", 
+                                  size = 20),
+        legend.text = element_text(color = "white"))
+
+# Save the map ----
+ggsave(filename = here::here("images", "sf_map.png"),
+       device = "png",
+       width = 8, height = 7, units = "in")
+```
+
+### Bar Chart
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                 Import Data + Data wrangling / cleaning                ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+summed_kpis <- read_csv(here::here("summed_KPIs.csv")) |>
+  filter(KPI != "Meals produced")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot data in bar chart and fill columns ----
+summed_kpis |>
+  ggplot(aes(x = KPI, y = Value)) +
+  geom_col(fill = "#00A6DA") +
+  scale_y_continuous(labels = function(x) paste0(x / 1000, "K")) + # Clean y-axis scales
+  theme_classic() +
+  theme(
+    axis.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks = element_blank(),
+    panel.background = element_rect(fill = "#0C2F5B"),
+    plot.background = element_rect(fill = "#0C2F5B"),
+    axis.text.y = element_text(color = "white", 
+                               family = "sans"),
+    axis.line = element_line(color = "white")
+    )
+  
+# Save the bar chart ----
+ggsave(filename = here::here("images", "kpi_plot.png"),
+       device = "png",
+       width = 5, height = 3, units = "in")
+```
+
+# Infographic Draft
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/HW4_infographic_v1.png")
+```
+
+# Concluding Questions
+
+1.  What challenges did you encounter or anticipate encountering as you continue to build / iterate on your visualizations in R? If you struggled with mocking up any of your three visualizations (from #6, above), describe those challenges here.\
+    \
+    I didn't enounter many challenges with my plots above. Instead, my challenge was figuring out what my third visual would be. I originally wanted to include a sankey diagram, but ultimately decided that (1) KPIs would be more meaningful to have than a network chart and (2) the sankey diagram would be too busy.
+
+2.  What ggplot extension tools / packages do you need to use to build your visualizations? Are there any that we haven’t covered in class that you’ll be learning how to use for your visualizations?\
+    \
+    I used the treemap library for my treemap plot. The help menu was really helpful for figuring out which commands to use and how to frame them. I had to google how to save the plot as a png, because ggsave only works for ggplots. All in all it was pretty smooth to work with.\
+    \
+    I also used rnaturalearth which we haven't used in EDS 240—however I did use it in my intro to data science class last quarter (ESM 206) and was able to use my old code as a template!
+
+3.  What feedback do you need from the instructional team and / or your peers to ensure that your intended message is clear?\
+    \
+    In discussion this past week, a classmate suggested that I use icons in my treemap instead of having the focus area labeled in text. After implementing this suggestion, I feel like the viewer may have to do more work to interpret that plot, so I'd appreciate more thoughts on this. I also would like feedback on my bar chart because it looks text heavy and I'm wondering if there's a better way to include the KPI and unit of each column in a cleaner way.
