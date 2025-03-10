@@ -170,7 +170,7 @@ treemap_fund <- treemap(treemap_data,
 
 ```{r}
 #| eval: true
-#| echo: false
+#| echo: true
 #| warning: false
 #| message: false
 #| code-fold: show
@@ -245,7 +245,7 @@ ggsave(filename = here::here("images", "sf_map_cedric_code.png"),
 
 ```{r}
 #| eval: true
-#| echo: false
+#| echo: true
 #| warning: false
 #| message: false
 #| code-fold: true
