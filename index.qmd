@@ -1,0 +1,301 @@
+---
+title: "EDS 240: HW4 Blog Post"
+format: html
+editor: visual
+author: "Danielle Turner"
+date: 2025-03-11
+theme: solar
+---
+
+## Visualizing Ocean Impact
+
+At Sea Forward Ocean Health Fund, our mission is to support innovative and impactful solutions for ocean health, with a focus on sustainable aquaculture, science-based monitoring tools, biodiversity, climate initiatives, and regenerative nature-based solutions. We’re also working to better understand the ocean investment landscape—where funding is going, what’s making a difference, and how we can guide future investments more effectively.
+
+Since Sea Forward is a relatively new investment company, there wasn’t a sufficient amount of existing data to analyze. This meant starting from square one—gathering, organizing, and making sense of the numbers. To do this I dug into impact reports from the funds and nonprofits we support, calculated key impact figures, and looked for interesting figures to showcase.
+
+The **infographic below** is the result of my work—a visualizatiom of Sea Forward's impact in 2024 that answers an **overarching** **question** with 3 sub-questions:
+
+**What does Sea Forward's 2024 impact look like?\
+1.** *Which focus areas are seeing the biggest effects?*\
+2. *Where are we making an impact?*\
+3. *What are Sea Forward’s major key productivity indicators and their 2024 values?*
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Infographic of Sea Forward's Ocean Impact by the Numbers where three plots (global map, tree map, and bar chart) are laid out to answer the overarching question and three sub-questions. A textbox about Sea Forward is included to contextualize the plots."
+knitr::include_graphics("images/final_infographic_v3.png")
+```
+
+*(full code chunks for the plots are available at the bottom of the page)*
+
+## The Design Process: Behind the Scenes
+
+When creating my plots and infographic, I put a lot of thought into every design choice—balancing aesthetics, clarity, and storytelling along the way.
+
+#### [Choosing the Right Visuals]{.underline}
+
+I kept Cleveland & McGill’s *Hierarchy of Elementary Perceptual Tasks* in mind throughout the process, making sure my graphics were as intuitive and effective as possible. Mapping global impact reach on a world map felt like an obvious choice, but I had to think more critically about my focus area impact and key impact indicator plots.
+
+At first, I considered using a doughnut chart for the focus area impact. But after revisiting the hierarchy, I realized a rectangular treemap would be much more efficient in showing how our investments break down across different areas.
+
+For my third visual, I initially went with a bar chart—only to second-guess myself because, well, bar charts can feel a little *boring*. A classmate even suggested switching to a circular plot like a stacked proportionate area chart or a bubble chart. But after gathering more feedback, I returned to the bar chart. Sometimes, simplicity is the best choice. And really, bar charts are one of the most intuitive ways to present data.
+
+#### [Typography & Text Decisions]{.underline}
+
+To stay aligned with Sea Forward’s branding, I picked three fonts: Baloo for the main heading, Belleza for the subheadings, and a clean sans-serif for the descriptive text. Font sizes followed a natural hierarchy—biggest for the main heading, then subheadings, and finally, body text.
+
+I also kept text minimal. Aside from titles and data points, I added only a couple short sections to provide context without overwhelming the visuals.
+
+#### [Keeping It Clean & Readable]{.underline}
+
+To make sure my plots weren’t too busy, I removed traditional legends and found other ways to present key information—like using colored text or icons within textboxes. I also stripped out unnecessary lines, extra titles, and changed the plot backgrounds to match the infographic’s background, which helped everything feel more cohesive.
+
+#### [Color, My Favorite Part]{.underline}
+
+Color is always the best part of any design process! I stuck with two core colors from Sea Forward’s branding and added a subtle third color for the global map. This was important because without it, only the highlighted countries (in light blue) would be represented.
+
+At one point, someone suggested removing the third color and just using colored borders, but that would’ve made all the small islands appear as static dots. To avoid that, I kept the border color the same as the background to reduce visual noise.
+
+#### [Centering Accessibility & Inclusion]{.underline}
+
+Applying a diversity, equity, and inclusion (DEI) lens is a non-negotiable part of my design process. I made intentional choices to ensure accessibility—using high-contrast colors, non-serif fonts, and embedding alt-text to improve readability for those with visual impairments.
+
+This also extended to my data selection. Many of the companies we invest in are in the Global South, where smaller organizations don’t always have the resources to track certain impact metrics like larger, well-funded companies do. Because of this, I made sure to include metrics that smaller groups were able to report, ensuring fair representation. I had also considered adding qualitative quotes from their impact reports, but in the end, I felt the extra text didn’t fit well with the overall design.
+
+## Code
+
+To explore the full code, please expand the chunks below:
+
+### [Tree Map]{.underline}
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+#| message: false
+#| code-fold: true
+#| code-summary: "Show Code"
+#| fig-alt: "Treemap of Sea Forward's investments break down across 6 focus areas where climate resilience innitiatives get almost half of funding (44.9%)."
+
+#SFOH logo color: #00A6DA
+#SFOH dark blue: #0C2F5B
+#SFOH fonts: Open sans, Belleza, and Baloo
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+suppressPackageStartupMessages({
+  library(janitor)
+  library(tidyverse)
+  library(here)
+})
+library(dplyr)
+library(ggplot2)
+library(treemap)
+
+
+#..........................import data...........................
+sfohf_companies <- read_csv(here::here("SFOHF_Companies.csv"), show_col_types = FALSE)
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Clean names, reorganize, and only keep data of interest ----
+treemap_fund_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct() |>
+  filter(type == "Fund") |>
+  ungroup()
+
+# Summarize the count per focus area ----
+treemap_data <- treemap_fund_data |>
+  group_by(focus_area) |>
+  summarise(count = sum(count)) |>
+  arrange(desc(count))
+
+# Calculate total count and percentages ----
+total_count_fund <- sum(treemap_data$count)
+treemap_data <- treemap_data |>
+  mutate(percentage = (count / total_count_fund) * 100,
+         subtext = paste0(round(percentage, 1), "%"),
+         label = paste0(subtext)) # Puts percent values onto tree map
+         #label = paste0(focus_area, "\n", subtext))  # Commenting out for now, but for text I may want on my plot later
+
+# Convert focus_area to a factor ----
+treemap_data <- treemap_data |>
+  mutate(focus_area = as.factor(focus_area))
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Save treemap ----
+#png(filename = here::here("treemap_fund.png"), width = 2000, height = 1500, res = 300)
+#dev.off()
+
+# Plot the treemap with labels ----
+treemap_fund <- treemap(treemap_data,
+        index = "label",      
+        vSize = "count",       
+        vColor = "focus_area", 
+        type = "categorical",  
+        palette = "#00A6DA", 
+        title = "Fund Focus Areas",
+        fontfamily.title = "belleza",
+        fontsize.labels = 10,
+        fontcolor.labels = "white",
+        force.print.labels = TRUE,
+        aspRatio = 2.75,
+        border.col = "#0C2F5B",
+        position.legend = "none")
+
+```
+
+### [Global Map]{.underline}
+
+(adapted from Cedric Scherer's [code](https://github.com/z3tt/30DayMapChallenge2019/blob/main/contributions/Day14_Boundaries/14_Boundaries.Rmd))
+
+```{r}
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+#| code-fold: show
+#| code-summary: "Show Code"
+#| fig-alt: "Global map of Sea Forward's impact reach where 53 countries of impact are highlighted in light blue."
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+
+#.........................load libraries.........................
+library(tidyverse)
+library(sf)
+library(showtext)
+
+#..........................import data...........................
+sf_world <- st_as_sf(rworldmap::getMap(resolution = "low")) |>
+  st_transform(crs = "+proj=robin")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+hq_locations <- read.csv("hq_locations.csv") |> 
+  rename("Tier 2 HQ location" = "Tier.2.HQ.location")
+
+# Filter columns, only keeping data of interest ----
+sf_hq <- sf_world |> 
+  filter(SOVEREIGNT %in% hq_locations$`Tier 2 HQ location`)
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot data. Code apapted from Cedric Sherer ----
+ggplot() +
+  #draw all country borders
+  geom_sf(data = sf_world, 
+          color = "#0C2F5B", 
+          fill = "#0C3F5B", # No fill for non-HQ countries
+          size = 0.3) +
+  #fill only Tier 2 HQ countries
+  geom_sf(data = sf_hq, 
+          fill = "#00A6DA", 
+          color = "#0C2F5B", 
+          size = 0.3) +
+  scale_x_continuous(breaks = seq(-180, 180, by = 30)) +
+  scale_y_continuous(breaks = c(seq(-80, 80, by = 20), 85)) +
+  scico::scale_fill_scico_d(direction = -1) +
+  theme_minimal() +
+  theme(axis.ticks = element_blank(),
+  axis.text = element_blank(),
+  panel.grid.major = element_line(color = "#4A707D",
+                                  size = 0.5),
+  panel.background = element_rect(color = NA,
+                                  fill = "#0C2F5B"),
+  plot.background = element_rect(color = NA,
+                                 fill = "#0C2F5B"),
+  legend.position = "none")
+
+# Save global map ----
+ggsave(filename = here::here("images", "sf_map_cedric_code.png"),
+       device = "png",
+       width = 8, height = 7, units = "in")
+```
+
+### [Bar Chart]{.underline}
+
+```{r}
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+#| code-fold: true
+#| code-summary: "Show Code"
+#| fig-alt: "Bar chart of Sea Forward's key impact indicators where four different ocean impact metrics are sorted in descending order"
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                 Import Data + Data wrangling / cleaning                ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+summed_kpis <- read_csv(here::here("summed_KPIs.csv")) |>
+  filter(KPI != "Meals produced")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot data in bar chart and fill columns ----
+summed_kpis |>
+  ggplot(aes(x = fct_reorder(KPI, Value, .desc = TRUE), y = Value)) +
+  geom_col(fill = "#00A6DA") +
+  scale_y_continuous(labels = function(x) paste0(x / 1000, "K")) + # Clean y-axis scales
+  theme_classic() +
+  theme(
+    axis.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks = element_blank(),
+    panel.background = element_rect(fill = "#0C2F5B"),
+    plot.background = element_rect(fill = "#0C2F5B"),
+    axis.text.y = element_text(color = "white", 
+                               family = "sans"),
+    axis.line = element_line(color = "white")
+    )
+  
+# Save the bar chart ----
+ggsave(filename = here::here("images", "kpi_plot.png"),
+       device = "png",
+       width = 5, height = 3, units = "in")
+```

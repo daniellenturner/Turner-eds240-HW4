@@ -1,0 +1,307 @@
+---
+title: "EDS 240: HW4 Blog Post"
+format: html
+editor: visual
+author: "Danielle Turner"
+date: 2025-03-05
+theme: sandstone
+---
+
+## INTRO
+
+Open with an engaging introduction paragraph(s), which states your motivation, question(s), data / data source(s), and goal(s) of your visualization.
+
+## EMBED / RENDER your final data visualization product(s)
+
+(e.g. your full infographic, your three data visualizations, or your approved deliverable) following your introduction. If you are rendering your data viz product from code, be sure that:
+
+-   *just* the output renders and *not* the code (e.g. using code chunk options `eval: true` & `echo: false`)
+
+-   warnings and messages are suppressed, as necessary (e.g. using code chunk options `warning: false` & `message: false`); other intermediate products should not be rendered
+
+-   see the Quarto documentation on [HTML Code Blocks](https://quarto.org/docs/output-formats/html-code.html) and [Execution Options](https://quarto.org/docs/computations/execution-options.html) for more
+
+### [Tree Map]{.underline}
+
+```{r}
+#SFOH logo color: #00A6DA
+#SFOH dark blue: #0C2F5B
+#SFOH fonts: Open sans, Belleza, and Baloo
+
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+suppressPackageStartupMessages({
+  library(janitor)
+  library(tidyverse)
+  library(here)
+})
+library(dplyr)
+library(ggplot2)
+library(treemap)
+
+
+#..........................import data...........................
+sfohf_companies <- read_csv(here::here("SFOHF_Companies.csv"), show_col_types = FALSE)
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Clean names, reorganize, and only keep data of interest ----
+treemap_fund_data <- sfohf_companies |>
+  clean_names() |>
+  select(org_tier_1, focus_area, type) |>
+  separate_rows(focus_area, sep = ", ") |>
+  group_by(org_tier_1, focus_area, type) |>
+  mutate(count = n()) |>
+  distinct() |>
+  filter(type == "Fund") |>
+  ungroup()
+
+# Summarize the count per focus area ----
+treemap_data <- treemap_fund_data |>
+  group_by(focus_area) |>
+  summarise(count = sum(count)) |>
+  arrange(desc(count))
+
+# Calculate total count and percentages ----
+total_count_fund <- sum(treemap_data$count)
+treemap_data <- treemap_data |>
+  mutate(percentage = (count / total_count_fund) * 100,
+         subtext = paste0(round(percentage, 1), "%"),
+         label = paste0(subtext)) # Puts percent values onto tree map
+         #label = paste0(focus_area, "\n", subtext))  # Commenting out for now, but for text I may want on my plot later
+
+# Convert focus_area to a factor ----
+treemap_data <- treemap_data |>
+  mutate(focus_area = as.factor(focus_area))
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Save treemap ----
+#png(filename = here::here("treemap_fund.png"), width = 2000, height = 1500, res = 300)
+#dev.off()
+
+# Plot the treemap with labels ----
+treemap_fund <- treemap(treemap_data,
+        index = "label",      
+        vSize = "count",       
+        vColor = "focus_area", 
+        type = "categorical",  
+        palette = "#00A6DA", 
+        title = "Fund Focus Areas",
+        fontfamily.title = "belleza",
+        fontsize.labels = 10,
+        fontcolor.labels = "white",
+        force.print.labels = TRUE,
+        aspRatio = 2.75,
+        border.col = "#0C2F5B",
+        position.legend = "none")
+```
+
+### [Global Map]{.underline}
+
+```{r}
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+####Code adapted from my ESM 206 Homework 1####
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(rnaturalearth) # base maps
+library(ggspatial) # north arrows and scale
+library(sf) #plotting boundaries
+library(rnaturalearthhires)
+library(ggplot2)
+library(rnaturalearthdata)
+library(tidygeocoder)
+library(dplyr)
+
+#..........................import world map data...........................
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                          Data wrangling / cleaning                       ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Create opacity column to show scale of funding to countries
+hq_locations <- sfohf_companies |>
+  filter(Type != "Grant") |>
+  count(`Tier 2 HQ location`, name = "count") |>
+  mutate(
+    `Tier 2 HQ location` = str_replace(`Tier 2 HQ location`, 
+                                       "United States", "United States of America"),
+    opacity_val = count / sum(count))  # Divide by total observations to get a percent
+
+
+#Define countries to highlight ----
+highlighted_countries <- c("United States", "Scotland", "Kenya", "Israel", "Norway",
+                           "Mozambique", "Indonesia", "Thailand", "Finland", "Brazil",
+                           "Ireland", "Madagascar", "Zimbabwe, Zambia", "South Africa",
+                           "Uganda", "Iceland", "Portugal", "Poland", "Netherlands", 
+                           "India", "Singapore", "Sweden", "Vietnam", "Canada", "Fiji",
+                           "Micronesia", "Papua New Guinea", "Philippines", 
+                           "Sri Lanka", "Maldives", "Seychelles", "Colombia", "Bahamas",
+                           "Guatemala", "Jordan", "Egypt", "Chile", "United Kingdom", 
+                           "France", "New Zealand", "Puerto Rico", "Australia", 
+                           "Ecuador", "Germany", "Denmark", "Italy", "Myanmar", 
+                           "Costa Rica", "Malaysia", "Honduras", "Mexico", "Belize")
+world <- world |>
+  mutate(highlight = ifelse(name_long %in% highlighted_countries, 
+                            "Impact Reached", "Not Yet"))
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot the map and fill countries ----
+ggplot(data = world) +  
+  geom_sf(aes(fill = highlight), color = "#00A6DA") + 
+  scale_fill_manual(values = c("#00A6DA", "#0C2F5B")) +
+  theme_minimal() +
+  ggtitle("Map of Sea Forward Ocean Health Fund's Impact Reach") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "#0C2F5B", color = NA),
+        plot.background = element_rect(fill = "#0C2F5B", color = NA),
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5, 
+                                  color = "white", 
+                                  family = "belleza", 
+                                  size = 20))
+
+# Save the map ----
+ggsave(filename = here::here("images", "sf_map.png"),
+       device = "png",
+       width = 8, height = 7, units = "in")
+```
+
+### [Bar Chart]{.underline}
+
+```{r}
+#| eval: true
+#| echo: false
+#| warning: false
+#| message: false
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                                    Setup                                 ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#.........................load libraries.........................
+
+library(here)
+library(janitor)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                 Import Data + Data wrangling / cleaning                ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+summed_kpis <- read_csv(here::here("summed_KPIs.csv")) |>
+  filter(KPI != "Meals produced")
+
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##                             Data visualization                           ----
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Plot data in bar chart and fill columns ----
+summed_kpis |>
+  ggplot(aes(x = fct_reorder(KPI, Value, .desc = TRUE), y = Value)) +
+  geom_col(fill = "#00A6DA") +
+  scale_y_continuous(labels = function(x) paste0(x / 1000, "K")) + # Clean y-axis scales
+  theme_classic() +
+  theme(
+    axis.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks = element_blank(),
+    panel.background = element_rect(fill = "#0C2F5B"),
+    plot.background = element_rect(fill = "#0C2F5B"),
+    axis.text.y = element_text(color = "white", 
+                               family = "sans"),
+    axis.line = element_line(color = "white")
+    )
+  
+# Save the bar chart ----
+ggsave(filename = here::here("images", "kpi_plot.png"),
+       device = "png",
+       width = 5, height = 3, units = "in")
+```
+
+### [Infographic]{.underline}
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+#| fig-alt: "Alt text here"
+knitr::include_graphics("images/inspo_pics/HW4_infographic_v1.png")
+```
+
+## APPROACH & DECISIONS
+
+1.  graphic form
+
+2.  text
+
+3.  themes
+
+4.  colors
+
+5.  typography
+
+6.  general design
+
+7.  contextualizing your data
+
+8.  centering your primary message
+
+9.  considering accessibility (NOTE TO SELF: colors, add an alt-text)
+
+10. applying a DEI lens to your design, as appropriate (NOTE TO SELF: add human quotes from reports)
+
+11. \*\*\*ADD NOTE FOR CODE CHUNK AT BOTTOM –\> written text beforehand that lets your readers know that they can explore the full code by expanding the chunk. Here, your code should:
+
+    -   print, but not execute (i.e. use code chunk options `eval: false` & `echo: true`)
+
+    -   follow the [tidyverse style guide](https://style.tidyverse.org/) (important styles are outlined on the [course website](https://eds-240-data-viz.github.io/clean-code-guide.html#general-conventions))
+
+    -   be appropriately organized and annotated (see [these recommendations](https://eds-240-data-viz.github.io/clean-code-guide.html#annotating-code))
+
+## FOLDED CODE CHUNK
+
+Include the all code used to generate your final data viz products in a foldable code chunk (folded by default; see code chunk option, [`code-fold: true`](https://quarto.org/docs/output-formats/html-code.html#folding-code)), at the end of your blog post.
