@@ -142,10 +142,6 @@ treemap_data <- treemap_data |>
 ##                             Data visualization                           ----
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Save treemap ----
-#png(filename = here::here("treemap_fund.png"), width = 2000, height = 1500, res = 300)
-#dev.off()
-
 # Plot the treemap with labels ----
 treemap_fund <- treemap(treemap_data,
         index = "label",      
@@ -173,7 +169,7 @@ treemap_fund <- treemap(treemap_data,
 #| echo: true
 #| warning: false
 #| message: false
-#| code-fold: show
+#| code-fold: true
 #| code-summary: "Show Code"
 #| fig-alt: "Global map of Sea Forward's impact reach where 53 countries of impact are highlighted in light blue."
 
@@ -235,10 +231,6 @@ ggplot() +
                                  fill = "#0C2F5B"),
   legend.position = "none")
 
-# Save global map ----
-ggsave(filename = here::here("images", "sf_map_cedric_code.png"),
-       device = "png",
-       width = 8, height = 7, units = "in")
 ```
 
 ### [Bar Chart]{.underline}
@@ -293,9 +285,5 @@ summed_kpis |>
                                family = "sans"),
     axis.line = element_line(color = "white")
     )
-  
-# Save the bar chart ----
-ggsave(filename = here::here("images", "kpi_plot.png"),
-       device = "png",
-       width = 5, height = 3, units = "in")
+
 ```
