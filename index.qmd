@@ -7,7 +7,7 @@ date: 2025-03-11
 theme: solar
 ---
 
-## Visualizing Ocean Impact (test)
+## Visualizing Ocean Impact
 
 At Sea Forward Ocean Health Fund, our mission is to support innovative and impactful solutions for ocean health, with a focus on sustainable aquaculture, science-based monitoring tools, biodiversity, climate initiatives, and regenerative nature-based solutions. We’re also working to better understand the ocean investment landscape—where funding is going, what’s making a difference, and how we can guide future investments more effectively.
 
