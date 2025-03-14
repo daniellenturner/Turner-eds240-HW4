@@ -7,6 +7,8 @@ date: 2025-03-11
 theme: solar
 ---
 
+
+
 ## Visualizing Ocean Impact
 
 At Sea Forward Ocean Health Fund, our mission is to support innovative and impactful solutions for ocean health, with a focus on sustainable aquaculture, science-based monitoring tools, biodiversity, climate initiatives, and regenerative nature-based solutions. We’re also working to better understand the ocean investment landscape—where funding is going, what’s making a difference, and how we can guide future investments more effectively.
@@ -20,6 +22,8 @@ The infographic below is the result of my work—a visualizatiom of Sea Forward'
 2. *Where are we making an impact?*\
 3. *What are Sea Forward’s major key productivity indicators and their 2024 values?*
 
+
+
 ```{r}
 #| eval: true
 #| echo: false
@@ -28,6 +32,8 @@ The infographic below is the result of my work—a visualizatiom of Sea Forward'
 #| fig-alt: "Infographic of Sea Forward's Ocean Impact by the Numbers where three plots (global map, tree map, and bar chart) are laid out to answer the overarching question and three sub-questions. A textbox about Sea Forward is included to contextualize the plots."
 knitr::include_graphics("images/final_infographic_v3.png")
 ```
+
+
 
 *(Full code chunks for the plots are available at the bottom of the page.)*
 
@@ -70,6 +76,8 @@ This also extended to my data selection. Many of the companies we invest in are 
 To explore the full code, please expand the chunks below:
 
 ### [Tree Map]{.underline}
+
+
 
 ```{r}
 #| eval: true
@@ -160,9 +168,13 @@ treemap_fund <- treemap(treemap_data,
 
 ```
 
+
+
 ### [Global Map]{.underline}
 
 (adapted from Cedric Scherer's [code](https://github.com/z3tt/30DayMapChallenge2019/blob/main/contributions/Day14_Boundaries/14_Boundaries.Rmd))
+
+
 
 ```{r}
 #| eval: true
@@ -233,7 +245,11 @@ ggplot() +
 
 ```
 
+
+
 ### [Bar Chart]{.underline}
+
+
 
 ```{r}
 #| eval: true
@@ -287,3 +303,4 @@ summed_kpis |>
     )
 
 ```
+
