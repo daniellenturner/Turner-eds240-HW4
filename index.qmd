@@ -13,7 +13,7 @@ At Sea Forward Ocean Health Fund, our mission is to support innovative and impac
 
 Since Sea Forward is a relatively new investment company, there wasn’t a sufficient amount of existing data to analyze. This meant starting from square one—gathering, organizing, and making sense of the numbers. To do this I dug into impact reports from the funds and nonprofits we support, calculated key impact figures, and looked for interesting figures to showcase.
 
-The infographic below is the result of my work—a visualizatiom of Sea Forward's impact in 2024 that answers an **overarching** **question** with *3 sub-questions*:
+The infographic below is the result of my work—a visualization of Sea Forward's impact in 2024 that answers an **overarching** **question** with *3 sub-questions*:
 
 **What does Sea Forward's 2024 impact look like?\
 1.** *Which focus areas are seeing the biggest effects?*\
